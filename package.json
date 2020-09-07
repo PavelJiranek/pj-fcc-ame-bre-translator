@@ -2,8 +2,10 @@
   "name": "american-british-english-translator",
   "version": "1.0.0",
   "description": "Quality Assurance 5: American / British English Translator",
+  "author": "Pavel Jiranek",
   "main": "server.js",
   "scripts": {
+    "yarn-install": "yarn install",
     "start": "nodemon server.js",
     "test": "mocha --require @babel/register --recursive --exit --ui tdd tests/"
   },
