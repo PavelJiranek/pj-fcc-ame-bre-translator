@@ -8,32 +8,46 @@
 
 const chai = require('chai');
 const assert = chai.assert;
+const R = require("ramda");
+const RA = require("ramda-adjunct");
 
 let Translator;
+const jsdom = require("jsdom");
+const { JSDOM } = jsdom;
+
 
 suite('Functional Tests', () => {
-  suiteSetup(() => {
-    // DOM already mocked -- load translator then run tests
-    Translator = require('../public/translator.js');
-  });
+    suiteSetup(() => {
+        return JSDOM.fromFile('./views/index.html')
+            .then((dom) => {
+                global.window = dom.window;
+                if (typeof document === 'undefined') {
+                    global.document = dom.window.document;
+                }
+                global.R = R;
+                global.RA = RA;
 
-  suite('Function ____()', () => {
-    /* 
-      The translated sentence is appended to the `translated-sentence` `div`
-      and the translated words or terms are wrapped in 
-      `<span class="highlight">...</span>` tags when the "Translate" button is pressed.
-    */
-    test("Translation appended to the `translated-sentence` `div`", done => {
-
-      // done();
+                Translator = require('../public/translator.js');
+            });
     });
 
-    /* 
-      If there are no words or terms that need to be translated,
-      the message 'Everything looks good to me!' is appended to the
-      `translated-sentence` `div` when the "Translate" button is pressed.
-    */
-    test("'Everything looks good to me!' message appended to the `translated-sentence` `div`", done => {
+    suite('Function ____()', () => {
+        /*
+          The translated sentence is appended to the `translated-sentence` `div`
+          and the translated words or terms are wrapped in
+          `<span class="highlight">...</span>` tags when the "Translate" button is pressed.
+        */
+        test("Translation appended to the `translated-sentence` `div`", done => {
+
+            // done();
+        });
+
+        /*
+          If there are no words or terms that need to be translated,
+          the message 'Everything looks good to me!' is appended to the
+          `translated-sentence` `div` when the "Translate" button is pressed.
+        */
+        test("'Everything looks good to me!' message appended to the `translated-sentence` `div`", done => {
 
       // done();
     });
@@ -44,22 +58,45 @@ suite('Functional Tests', () => {
       the `error-msg` `div`.
     */
     test("'Error: No text to translate.' message appended to the `translated-sentence` `div`", done => {
+        const errorContainer = document.getElementById('error-msg');
+        assert.isFalse(!!errorContainer.textContent); // sanity check
 
-      // done();
+        Translator.handleTranslate();
+
+        assert.equal(errorContainer.textContent, Translator.NO_TEXT_TO_TRANSLATE_ERROR);
+
+        done();
     });
 
-  });
-
-  suite('Function ____()', () => {
-    /* 
-      The text area and both the `translated-sentence` and `error-msg`
-      `divs` are cleared when the "Clear" button is pressed.
-    */
-    test("Text area, `translated-sentence`, and `error-msg` are cleared", done => {
-
-      // done();
     });
 
-  });
+    suite('Function handleClear()', () => {
+        /*
+          The text area and both the `translated-sentence` and `error-msg`
+          `divs` are cleared when the "Clear" button is pressed.
+        */
+        test("Text area, `translated-sentence`, and `error-msg` are cleared", done => {
+            const textArea = document.getElementById('text-input');
+            const translationOutput = document.getElementById('translated-sentence');
+            const errorContainer = document.getElementById('error-msg');
+
+            textArea.value = "textarea";
+            translationOutput.textContent = 'translationOutput';
+            errorContainer.textContent = 'errorContainer';
+
+            assert.isTrue(!!textArea.value); // sanity check
+            assert.isTrue(!!translationOutput.textContent); // sanity check
+            assert.isTrue(!!errorContainer.textContent); // sanity check
+
+            Translator.handleClear();
+
+            assert.isFalse(!!textArea.value);
+            assert.isFalse(!!translationOutput.textContent);
+            assert.isFalse(!!errorContainer.textContent);
+
+            done();
+        });
+
+    });
 
 });
