@@ -11,9 +11,9 @@ const assert = chai.assert;
 const R = require("ramda");
 const RA = require("ramda-adjunct");
 
-let Translator;
 const jsdom = require("jsdom");
 const { JSDOM } = jsdom;
+let Translator;
 
 
 suite('Functional Tests', () => {
@@ -31,7 +31,7 @@ suite('Functional Tests', () => {
             });
     });
 
-    suite('Function ____()', () => {
+    suite('Function handleTranslate()', () => {
         /*
           The translated sentence is appended to the `translated-sentence` `div`
           and the translated words or terms are wrapped in
@@ -48,9 +48,17 @@ suite('Functional Tests', () => {
           `translated-sentence` `div` when the "Translate" button is pressed.
         */
         test("'Everything looks good to me!' message appended to the `translated-sentence` `div`", done => {
+            const textArea = document.getElementById('text-input');
+            const translationResult = document.getElementById('translated-sentence');
+            assert.isFalse(!!translationResult.textContent); // sanity check
 
-      // done();
-    });
+            textArea.value = "There are no words or terms that need to be translated";
+            Translator.handleTranslate();
+
+            assert.equal(translationResult.textContent, Translator.NO_TRANSLATION_NEEDED_MESSAGE);
+
+            done();
+        });
 
     /* 
       If the text area is empty when the "Translation" button is
@@ -58,6 +66,8 @@ suite('Functional Tests', () => {
       the `error-msg` `div`.
     */
     test("'Error: No text to translate.' message appended to the `translated-sentence` `div`", done => {
+        const textArea = document.getElementById('text-input');
+        textArea.value = "";
         const errorContainer = document.getElementById('error-msg');
         assert.isFalse(!!errorContainer.textContent); // sanity check
 

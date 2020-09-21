@@ -48,6 +48,7 @@ try {
     handleTranslate,
     handleClear,
     NO_TEXT_TO_TRANSLATE_ERROR,
+    NO_TRANSLATION_NEEDED_MESSAGE
   }
 } catch (e) {
 }
