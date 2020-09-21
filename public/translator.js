@@ -18,6 +18,13 @@ const errorContainer = document.getElementById('error-msg');
 const NO_TEXT_TO_TRANSLATE_ERROR = "Error: No text to translate.";
 const NO_TRANSLATION_NEEDED_MESSAGE = "Everything looks good to me!";
 
+const britishTimeMatcher = /^(\d{1,2})\.(\d{2})/;
+const americanTimeMatcher = /^(\d{1,2}):(\d{2})/;
+
+const britishToAmericanTime = str => str.replace(britishTimeMatcher, "$1:$2");
+const americanToBritishTime = str => str.replace(americanTimeMatcher, "$1.$2");
+
+
 const Locales = {
   "american-to-british": "american-to-british",
   "british-to-american": "british-to-american",
@@ -29,13 +36,24 @@ const DictionaryTypes = {
   wordsAndPhrases: "wordsAndPhrases",
 }
 
+const Time = {
+  [Locales['american-to-british']]: {
+    converter: americanToBritishTime,
+    matcher: americanTimeMatcher,
+  },
+  [Locales['british-to-american']]: {
+    converter: britishToAmericanTime,
+    matcher: britishTimeMatcher,
+  },
+}
+
 const Dictionaries = {
-  "american-to-british": {
+  [Locales['american-to-british']]: {
     titles: americanToBritishTitles,
     spelling: americanToBritishSpelling,
     wordsAndPhrases: americanOnly,
   },
-  "british-to-american": {
+  [Locales['british-to-american']]: {
     titles: britishToAmericanTitles,
     spelling: britishToAmericanSpelling,
     wordsAndPhrases: britishOnly,
@@ -47,11 +65,11 @@ document.addEventListener('DOMContentLoaded', () => {
   clearButton.onclick = handleClear;
 });
 
-const wrapTranslatedWord = word => `<span class="highlight">${word}</span>`;
+const wrapWithHightlightSpan = word => `<span class="highlight">${word}</span>`;
 
 const translateByWord = (input, locale, highlightTranslations, dictionaryType) => {
   const dictionary = Dictionaries[locale][dictionaryType];
-  let counter = 0;
+  let hasTranslated = false;
 
   const words = input.split(' ');
   const translatedInput = words.map(word => {
@@ -60,14 +78,32 @@ const translateByWord = (input, locale, highlightTranslations, dictionaryType) =
 
     if (translation) {
       const preservedCaseTranslation = replace(word, word, translation);
-      counter++;
-      return highlightTranslations ? wrapTranslatedWord(preservedCaseTranslation) : preservedCaseTranslation;
+      hasTranslated = true;
+      return highlightTranslations ? wrapWithHightlightSpan(preservedCaseTranslation) : preservedCaseTranslation;
     }
     return word;
   });
 
-  return [translatedInput.join(' '), counter];
+  return [translatedInput.join(' '), hasTranslated];
 }
+
+const convertTime = (input, locale, highlightTranslations) => {
+  const matcher = Time[locale].matcher;
+  const convert = Time[locale].converter;
+  let hasConverted = false;
+
+  const words = input.split(' ');
+  const convertedInput = words.map(word => {
+    if (matcher.test(word)) {
+      hasConverted = true;
+      const convertedTime = convert(word);
+      return highlightTranslations ? wrapWithHightlightSpan(convertedTime) : convertedTime;
+    }
+    return word;
+  });
+
+  return [convertedInput.join(' '), hasConverted];
+};
 
 const translateSpelling = (input, locale, highlightTranslations) => {
   return translateByWord(input, locale, highlightTranslations, DictionaryTypes.spelling);
@@ -79,18 +115,20 @@ const translateTitles = (input, locale, highlightTranslations) => {
 
 const translate = (input, locale, highlightTranslations = true) => {
   let translation = input,
-      translatedCounter = 0;
+      isTranslated = false;
 
-  const updateTranslation = ([newTranslation, newCount]) => {
-    if (newCount) {
+  const updateTranslation = ([newTranslation, hasTranslation]) => {
+    if (hasTranslation) {
       translation = newTranslation;
-      translatedCounter = newCount;
+      isTranslated = hasTranslation;
     }
   };
 
   updateTranslation(translateSpelling(translation, locale, highlightTranslations));
   updateTranslation(translateTitles(translation, locale, highlightTranslations));
-  return [translation, translatedCounter];
+  updateTranslation(convertTime(translation, locale, highlightTranslations));
+
+  return [translation, isTranslated];
 };
 
 const handleTranslate = () => {
@@ -104,12 +142,12 @@ const handleTranslate = () => {
   const locale = Locales[localeSelect.value],
       input = textArea.value;
 
-  const [translation, noOfTranslations] = translate(input, locale)
+  const [translation, isTranslated] = translate(input, locale)
 
-  if (noOfTranslations === 0) {
-    translationOutput.textContent = NO_TRANSLATION_NEEDED_MESSAGE;
-  } else {
+  if (isTranslated) {
     translationOutput.innerHTML = translation;
+  } else {
+    translationOutput.textContent = NO_TRANSLATION_NEEDED_MESSAGE;
   }
 }
 
