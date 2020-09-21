@@ -6,6 +6,8 @@
   "main": "server.js",
   "scripts": {
     "yarn-install": "yarn install",
+    "browserify-build": "browserify node_modules/preserve-case --standalone replace > ./public/preserveCase.js",
+    "prestart": "yarn run yarn-install && yarn run browserify-build",
     "start": "nodemon server.js",
     "test": "mocha --require @babel/register --recursive --exit --ui tdd tests/"
   },
@@ -20,7 +22,9 @@
     "express": "^4.17.1",
     "jsdom": "^16.2.2",
     "mocha": "^6.2.3",
-    "nodemon": "^2.0.3"
+    "nodemon": "^2.0.3",
+    "preserve-case": "^1.1.1",
+    "browserify": "^16.5.2"
   },
   "devDependencies": {
     "ramda": "^0.27.1",

@@ -57,15 +57,20 @@ const translateByWord = (input, locale, dictionaryType) => {
   const translatedInput = words.map(word => {
     const lcWord = word.toLowerCase();
     const translation = dictionary[lcWord];
-    // todo preserve case, title tests
+
     if (translation) {
+      const preservedCaseTranslation = replace(word, word, translation);
       counter++;
-      return wrapTranslatedWord(translation);
+      return wrapTranslatedWord(preservedCaseTranslation);
     }
     return word;
   });
 
   return [translatedInput.join(' '), counter];
+}
+
+const translateSpelling = (input, locale) => {
+  return translateByWord(input, locale, DictionaryTypes.spelling);
 }
 
 const translateTitles = (input, locale) => {
@@ -94,7 +99,8 @@ const handleTranslate = () => {
     }
   };
 
-  updateTranslation(translateTitles(input, locale));
+  updateTranslation(translateSpelling(input, locale));
+  updateTranslation(translateTitles(translation, locale));
 
 
   if (translatedCounter === 0) {

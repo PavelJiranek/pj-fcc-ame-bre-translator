@@ -8,6 +8,9 @@
 
 const chai = require('chai');
 const assert = chai.assert;
+const R = require("ramda");
+const RA = require("ramda-adjunct");
+const replace = require("preserve-case");
 
 const { JSDOM } = require('jsdom');
 let Translator;
@@ -16,12 +19,15 @@ suite('Unit Tests', () => {
   suiteSetup(() => {
     // Mock the DOM for testing and load Translator
     return JSDOM.fromFile('./views/index.html')
-      .then((dom) => {
-        global.window = dom.window;
-        global.document = dom.window.document;
+        .then((dom) => {
+          global.window = dom.window;
+          global.document = dom.window.document;
+          global.R = R;
+          global.RA = RA;
+          global.replace = replace;
 
-        Translator = require('../public/translator.js');
-      });
+          Translator = require('../public/translator.js');
+        });
   });
 
   suite('Function ____()', () => {

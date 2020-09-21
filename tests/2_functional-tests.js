@@ -10,6 +10,7 @@ const chai = require('chai');
 const assert = chai.assert;
 const R = require("ramda");
 const RA = require("ramda-adjunct");
+const replace = require("preserve-case");
 
 const jsdom = require("jsdom");
 const { JSDOM } = jsdom;
@@ -26,8 +27,14 @@ suite('Functional Tests', () => {
                 }
                 global.R = R;
                 global.RA = RA;
+                global.replace = replace;
 
                 Translator = require('../public/translator.js');
+
+                global.textArea = document.getElementById('text-input');
+                global.translationOutput = document.getElementById('translated-sentence');
+                global.errorContainer = document.getElementById('error-msg');
+
             });
     });
 
@@ -38,8 +45,19 @@ suite('Functional Tests', () => {
           `<span class="highlight">...</span>` tags when the "Translate" button is pressed.
         */
         test("Translation appended to the `translated-sentence` `div`", done => {
+            const INPUT = 'Dr. Write localizes colorful books.';
+            const TEXT_OUTPUT = 'Dr Write localises colourful books.';
+            const HTML_OUTPUT = '<span class="highlight">Dr</span> Write <span class="highlight">localises</span> <span class="highlight">colourful</span> books.';
 
-            // done();
+            assert.isFalse(!!translationOutput.textContent); // sanity check
+
+            textArea.value = INPUT;
+            Translator.handleTranslate();
+
+            assert.equal(translationOutput.textContent, TEXT_OUTPUT);
+            assert.equal(translationOutput.innerHTML, HTML_OUTPUT);
+
+            done();
         });
 
         /*
@@ -48,35 +66,29 @@ suite('Functional Tests', () => {
           `translated-sentence` `div` when the "Translate" button is pressed.
         */
         test("'Everything looks good to me!' message appended to the `translated-sentence` `div`", done => {
-            const textArea = document.getElementById('text-input');
-            const translationResult = document.getElementById('translated-sentence');
-            assert.isFalse(!!translationResult.textContent); // sanity check
-
             textArea.value = "There are no words or terms that need to be translated";
             Translator.handleTranslate();
 
-            assert.equal(translationResult.textContent, Translator.NO_TRANSLATION_NEEDED_MESSAGE);
+            assert.equal(translationOutput.textContent, Translator.NO_TRANSLATION_NEEDED_MESSAGE);
 
             done();
         });
 
-    /* 
-      If the text area is empty when the "Translation" button is
-      pressed, append the message 'Error: No text to translate.' to 
-      the `error-msg` `div`.
-    */
-    test("'Error: No text to translate.' message appended to the `translated-sentence` `div`", done => {
-        const textArea = document.getElementById('text-input');
-        textArea.value = "";
-        const errorContainer = document.getElementById('error-msg');
-        assert.isFalse(!!errorContainer.textContent); // sanity check
+        /*
+          If the text area is empty when the "Translation" button is
+          pressed, append the message 'Error: No text to translate.' to
+          the `error-msg` `div`.
+        */
+        test("'Error: No text to translate.' message appended to the `translated-sentence` `div`", done => {
+            textArea.value = "";
+            assert.isFalse(!!errorContainer.textContent); // sanity check
 
-        Translator.handleTranslate();
+            Translator.handleTranslate();
 
-        assert.equal(errorContainer.textContent, Translator.NO_TEXT_TO_TRANSLATE_ERROR);
+            assert.equal(errorContainer.textContent, Translator.NO_TEXT_TO_TRANSLATE_ERROR);
 
-        done();
-    });
+            done();
+        });
 
     });
 
@@ -86,10 +98,6 @@ suite('Functional Tests', () => {
           `divs` are cleared when the "Clear" button is pressed.
         */
         test("Text area, `translated-sentence`, and `error-msg` are cleared", done => {
-            const textArea = document.getElementById('text-input');
-            const translationOutput = document.getElementById('translated-sentence');
-            const errorContainer = document.getElementById('error-msg');
-
             textArea.value = "textarea";
             translationOutput.textContent = 'translationOutput';
             errorContainer.textContent = 'errorContainer';
