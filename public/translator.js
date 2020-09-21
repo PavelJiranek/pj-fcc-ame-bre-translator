@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 const wrapTranslatedWord = word => `<span class="highlight">${word}</span>`;
 
-const translateByWord = (input, locale, dictionaryType) => {
+const translateByWord = (input, locale, highlightTranslations, dictionaryType) => {
   const dictionary = Dictionaries[locale][dictionaryType];
   let counter = 0;
 
@@ -61,7 +61,7 @@ const translateByWord = (input, locale, dictionaryType) => {
     if (translation) {
       const preservedCaseTranslation = replace(word, word, translation);
       counter++;
-      return wrapTranslatedWord(preservedCaseTranslation);
+      return highlightTranslations ? wrapTranslatedWord(preservedCaseTranslation) : preservedCaseTranslation;
     }
     return word;
   });
@@ -69,14 +69,29 @@ const translateByWord = (input, locale, dictionaryType) => {
   return [translatedInput.join(' '), counter];
 }
 
-const translateSpelling = (input, locale) => {
-  return translateByWord(input, locale, DictionaryTypes.spelling);
+const translateSpelling = (input, locale, highlightTranslations) => {
+  return translateByWord(input, locale, highlightTranslations, DictionaryTypes.spelling);
 }
 
-const translateTitles = (input, locale) => {
-  return translateByWord(input, locale, DictionaryTypes.titles);
+const translateTitles = (input, locale, highlightTranslations) => {
+  return translateByWord(input, locale, highlightTranslations, DictionaryTypes.titles);
 }
 
+const translate = (input, locale, highlightTranslations = true) => {
+  let translation = input,
+      translatedCounter = 0;
+
+  const updateTranslation = ([newTranslation, newCount]) => {
+    if (newCount) {
+      translation = newTranslation;
+      translatedCounter = newCount;
+    }
+  };
+
+  updateTranslation(translateSpelling(translation, locale, highlightTranslations));
+  updateTranslation(translateTitles(translation, locale, highlightTranslations));
+  return [translation, translatedCounter];
+};
 
 const handleTranslate = () => {
   if (!textArea.value) {
@@ -88,22 +103,10 @@ const handleTranslate = () => {
 
   const locale = Locales[localeSelect.value],
       input = textArea.value;
-  let translation = '',
-      translatedCounter = 0,
-      translations = [];
 
-  const updateTranslation = ([newTranslation, newCount]) => {
-    if (newCount) {
-      translation = newTranslation;
-      translatedCounter = newCount;
-    }
-  };
+  const [translation, noOfTranslations] = translate(input, locale)
 
-  updateTranslation(translateSpelling(input, locale));
-  updateTranslation(translateTitles(translation, locale));
-
-
-  if (translatedCounter === 0) {
+  if (noOfTranslations === 0) {
     translationOutput.textContent = NO_TRANSLATION_NEEDED_MESSAGE;
   } else {
     translationOutput.innerHTML = translation;
@@ -125,8 +128,10 @@ try {
   module.exports = {
     handleTranslate,
     handleClear,
+    translate,
     NO_TEXT_TO_TRANSLATE_ERROR,
-    NO_TRANSLATION_NEEDED_MESSAGE
+    NO_TRANSLATION_NEEDED_MESSAGE,
+    Locales,
   }
 } catch (e) {
 }
