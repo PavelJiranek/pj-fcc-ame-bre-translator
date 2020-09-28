@@ -81,6 +81,7 @@ input[type="button"] {
 
 .highlight {
   color: var(--success);
+  cursor: help;
 }
 
 #text-input {

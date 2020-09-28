@@ -45,9 +45,9 @@ suite('Functional Tests', () => {
           `<span class="highlight">...</span>` tags when the "Translate" button is pressed.
         */
         test("Translation appended to the `translated-sentence` `div`", done => {
-            const INPUT = 'Dr. Wright localizes colorful books only at 10:30 AM.';
-            const TEXT_OUTPUT = 'Dr Wright localises colourful books only at 10.30 AM.';
-            const HTML_OUTPUT = '<span class="highlight">Dr</span> Wright <span class="highlight">localises</span> <span class="highlight">colourful</span> books only at <span class="highlight">10.30</span> AM.';
+            const INPUT = 'Dr. Wright localizes colorful books only at 10:30 AM, otherwise he works as a mail carrier.';
+            const TEXT_OUTPUT = 'Dr Wright localises colourful books only at 10.30 AM, otherwise he works as a postal worker.';
+            const HTML_OUTPUT = '<span class="highlight" title="Dr.">Dr</span> Wright <span class="highlight" title="localizes">localises</span> <span class="highlight" title="colorful">colourful</span> books only at <span class="highlight" title="10:30">10.30</span> AM, otherwise he works as a <span class="highlight" title="mail carrier">postal worker</span>.';
 
             assert.isFalse(!!translationOutput.textContent); // sanity check
 

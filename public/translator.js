@@ -3,7 +3,7 @@ import { britishOnly } from './british-only.js';
 import { americanToBritishSpelling } from './american-to-british-spelling.js';
 import { americanToBritishTitles } from './american-to-british-titles.js';
 
-const { invertObj } = R;
+const { invertObj, forEachObjIndexed } = R;
 
 const britishToAmericanTitles = invertObj(americanToBritishTitles);
 const britishToAmericanSpelling = invertObj(americanToBritishSpelling);
@@ -65,7 +65,34 @@ document.addEventListener('DOMContentLoaded', () => {
   clearButton.onclick = handleClear;
 });
 
-const wrapWithHightlightSpan = word => `<span class="highlight">${word}</span>`;
+const wrapWithHighlightSpan = (newWord, originalWord) => `<span class="highlight" title="${originalWord}">${newWord}</span>`;
+
+
+const translateWordsAndPhrases = (input, locale, highlightTranslations) => {
+  const dictionary = Dictionaries[locale][DictionaryTypes.wordsAndPhrases];
+  let hasTranslated = false,
+      translatedInput = input;
+  const replaceDictionaryMatch = (toLocalePhrase, fromLocalePhrase) => {
+    /**
+     * Do not match in-between phrases starting with '-',
+     * and don't match in already translated phrases followed by highlight span.
+     */
+    const fromLocaleMatcher = new RegExp(`(?<!-)${fromLocalePhrase}\\b(?!</span>)`, 'ig');
+
+    if (fromLocaleMatcher.test(translatedInput)) {
+      translatedInput = replace(
+          translatedInput,
+          fromLocaleMatcher,
+          () => highlightTranslations ? wrapWithHighlightSpan(toLocalePhrase, fromLocalePhrase) : toLocalePhrase,
+      );
+      hasTranslated = true;
+    }
+  }
+
+  forEachObjIndexed(replaceDictionaryMatch, dictionary);
+
+  return [translatedInput, hasTranslated];
+}
 
 const translateByWord = (input, locale, highlightTranslations, dictionaryType) => {
   const dictionary = Dictionaries[locale][dictionaryType];
@@ -79,7 +106,7 @@ const translateByWord = (input, locale, highlightTranslations, dictionaryType) =
     if (translation) {
       const preservedCaseTranslation = replace(word, word, translation);
       hasTranslated = true;
-      return highlightTranslations ? wrapWithHightlightSpan(preservedCaseTranslation) : preservedCaseTranslation;
+      return highlightTranslations ? wrapWithHighlightSpan(preservedCaseTranslation, word) : preservedCaseTranslation;
     }
     return word;
   });
@@ -97,7 +124,7 @@ const convertTime = (input, locale, highlightTranslations) => {
     if (matcher.test(word)) {
       hasConverted = true;
       const convertedTime = convert(word);
-      return highlightTranslations ? wrapWithHightlightSpan(convertedTime) : convertedTime;
+      return highlightTranslations ? wrapWithHighlightSpan(convertedTime, word) : convertedTime;
     }
     return word;
   });
@@ -124,6 +151,7 @@ const translate = (input, locale, highlightTranslations = true) => {
     }
   };
 
+  updateTranslation(translateWordsAndPhrases(translation, locale, highlightTranslations));
   updateTranslation(translateSpelling(translation, locale, highlightTranslations));
   updateTranslation(translateTitles(translation, locale, highlightTranslations));
   updateTranslation(convertTime(translation, locale, highlightTranslations));
