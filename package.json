@@ -6,7 +6,7 @@
   "main": "server.js",
   "scripts": {
     "yarn-install": "yarn install",
-    "browserify-build": "browserify node_modules/preserve-case --standalone replace > ./public/preserveCase.js",
+    "browserify-build": "browserify node_modules/preserve-case --standalone replace > ./public/module_preserveCase.js",
     "prestart": "yarn run yarn-install && yarn run browserify-build",
     "start": "nodemon server.js",
     "test": "mocha --require @babel/register --recursive --exit --ui tdd tests/"
